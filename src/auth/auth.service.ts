@@ -1,26 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { UserService } from '../../src/modules/users/users.service';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcryptjs';
 import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
-  }
+  constructor(
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  findAll() {
-    return `This action returns all auth`;
-  }
+  async signIn(body: CreateAuthDto): Promise<{ access_token: string }> {
+    const user = await this.userService.findOne(body.email);
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
+    const payload = {
+      id: user.id,
+      email: user.email,
+    };
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
+    const passwordCorrect = await bcrypt.compare(body.password, user.password);
 
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+    if (!passwordCorrect)
+      throw new UnauthorizedException({
+        message: 'Falha de autenticação.',
+        error: 'Credenciais inválidas',
+      });
+
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+    };
   }
 }
