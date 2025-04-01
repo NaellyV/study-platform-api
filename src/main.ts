@@ -5,7 +5,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Configuração do Swagger (DEVE vir antes do app.listen())
   const config = new DocumentBuilder()
     .setTitle('Sua API')
     .setDescription('Documentação da API')
@@ -13,7 +12,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document); // Rota: /api
+  SwaggerModule.setup('api', app, document); 
 
   await app.listen(3000);
 }

@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from './skipAuth/skipAuth';
-import { AuthUser } from '../../src/interface/AuthUser';
+import { AuthUser } from '../../interface/AuthUser';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

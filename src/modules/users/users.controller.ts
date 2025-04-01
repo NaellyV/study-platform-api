@@ -1,22 +1,45 @@
-import { Controller, Get, Body, Param, Delete, UseGuards, Patch } from '@nestjs/common';
+import { Controller, Get, Body, Param, Delete, UseGuards, Post, Patch } from '@nestjs/common';
 import { UserService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { AuthGuard } from '../../auth/auth.guard';
+import { CreateUserDto } from './dto/create-user.dto';
+
+import { AuthGuard } from '../auth/auth.guard';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Usuario')
-@Controller('usuario')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards(AuthGuard)
+
+  @Post()
+  @ApiOperation({ summary: 'Cria um novo usuário' })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'Usuário criado com sucesso.' 
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Dados inválidos fornecidos.' 
+  })
+  @ApiResponse({ 
+    status: 409, 
+    description: 'Email já está em uso.' 
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Erro interno do servidor.' 
+  })
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.userService.create(createUserDto);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Lista todos os usuários' })
   @ApiResponse({ status: 200, description: `Usuários listados com sucesso.` })
   @ApiResponse({ status: 400, description: `Erro ao listar usuários` })
   @ApiResponse({ status: 404, description: `Nenhum usuário encontrado` })
   @ApiResponse({ status: 500, description: 'Erro interno do servidor.' })
-  @ApiBearerAuth('access_token')
   findAll() {
     return this.userService.findAll();
   }

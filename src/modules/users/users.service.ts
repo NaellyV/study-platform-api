@@ -3,10 +3,47 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../../database/PrismaService';
 import * as bcrypt from 'bcryptjs';
 import { randomInt } from 'node:crypto';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async create(body: CreateUserDto) {
+    const userExists = await this.prisma.user.findUnique({
+      where: { email: body.email },
+    });
+
+    if (userExists) {
+      throw new HttpException('Email já está em uso', HttpStatus.CONFLICT);
+    }
+
+    const saltRounds = randomInt(10, 16);
+    const hashedPassword = await bcrypt.hash(body.password, saltRounds);
+
+    try {
+      const newUser = await this.prisma.user.create({
+        data: {
+          name: body.name,
+          email: body.email,
+          password: hashedPassword,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      });
+
+      return newUser;
+    } catch (error) {
+      throw new HttpException(
+        'Erro ao criar usuário',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
 
   async findAll() {
     try {
@@ -25,6 +62,8 @@ export class UserService {
       throw new HttpException(error as string, HttpStatus.BAD_REQUEST);
     }
   }
+
+  
 
   async findOne(identifier: string) {
     const isEmail = identifier.includes('@');
